@@ -1,0 +1,82 @@
+﻿<div class="page">
+  <header class="page-header">
+    <div>
+      <h1>Documents</h1>
+      <p class="subtitle">{{ items().length }} indexed document{{ items().length === 1 ? '' : 's' }}</p>
+    </div>
+    <button class="btn btn-primary" (click)="load()" [disabled]="loading()">
+      {{ loading() ? 'Refreshing…' : 'Refresh' }}
+    </button>
+  </header>
+
+  @if (error(); as err) {
+    <div class="alert alert-error" role="alert">
+      <span>⚠</span>
+      <span>{{ err }}</span>
+    </div>
+  }
+
+  @if (loading()) {
+    <div class="empty">
+      <div class="spinner"></div>
+      <p>Loading documents…</p>
+    </div>
+  } @else if (items().length === 0) {
+    <div class="empty">
+      <div class="empty-icon">▤</div>
+      <h3>No documents yet</h3>
+      <p>Upload a PDF, DOCX or TXT file to start indexing.</p>
+    </div>
+  } @else {
+    <div class="table-wrap">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th class="num">Chunks</th>
+            <th>Uploaded</th>
+            <th class="actions-col"></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (doc of items(); track doc.documentID) {
+            <tr>
+              <td>
+                <div class="file-cell">
+                  <span class="file-icon" [class.unsupported]="!isSupported(doc.fileType)">
+                    {{ isSupported(doc.fileType) ? '📄' : '❔' }}
+                  </span>
+                  <span class="file-name" [title]="doc.fileName">{{ doc.fileName }}</span>
+                </div>
+              </td>
+              <td>
+                <span class="badge">{{ doc.fileType }}</span>
+              </td>
+              <td class="num">
+                <span class="chunk-count" [class.zero]="doc.chunkCount === 0">
+                  {{ formatSize(doc.chunkCount) }}
+                </span>
+                @if (doc.chunkCount === 0) {
+                  <span class="badge badge-warn">empty</span>
+                }
+              </td>
+              <td class="muted">{{ formatDate(doc.uploadDate) }}</td>
+              <td class="actions-col">
+                <button
+                  class="btn btn-ghost btn-danger"
+                  (click)="remove(doc)"
+                  [disabled]="deletingId() === doc.documentID"
+                  [title]="'Delete ' + doc.fileName"
+                >
+                  {{ deletingId() === doc.documentID ? '…' : 'Delete' }}
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>
+
