@@ -1,0 +1,31 @@
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="brand">
+      <span class="brand-mark">◈</span>
+      <span class="brand-name">VectorSearch</span>
+    </div>
+
+    <nav class="nav">
+      @for (item of navItems; track item.path) {
+        <a
+          class="nav-link"
+          [routerLink]="item.path"
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{ exact: true }"
+        >
+          <span class="nav-icon">{{ item.icon }}</span>
+          <span>{{ item.label }}</span>
+        </a>
+      }
+    </nav>
+
+    <div class="sidebar-footer">
+      <span class="status-dot" [class.online]="backendOnline"></span>
+      <span>{{ backendOnline ? 'API online' : 'API offline' }}</span>
+    </div>
+  </aside>
+
+  <main class="content">
+    <router-outlet />
+  </main>
+</div>

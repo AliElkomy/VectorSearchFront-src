@@ -1,0 +1,91 @@
+<div class="page chat-page">
+  <header class="page-header">
+    <div>
+      <h1>Chat with your documents</h1>
+      <p class="subtitle">Questions are answered from the indexed chunks using vector similarity.</p>
+    </div>
+    @if (messages().length > 0) {
+      <button class="btn btn-ghost" (click)="clear()">Clear</button>
+    }
+  </header>
+
+  @if (hasIndex() === false) {
+    <div class="alert alert-warn" role="alert">
+      <span>⚠</span>
+      <span>No indexed chunks found. Upload a document first so there is something to search.</span>
+      <a class="link" routerLink="/upload">Go to upload →</a>
+    </div>
+  }
+
+  <div class="chat-layout">
+    <div class="chat-main">
+      <div class="messages" #scrollContainer>
+        @if (messages().length === 0) {
+          <div class="chat-empty">
+            <div class="chat-empty-icon">💬</div>
+            <h3>Ask anything about your documents</h3>
+            <p>The three most relevant chunks are retrieved and passed to the model as context.</p>
+            <div class="suggestions">
+              @for (s of suggestions; track s) {
+                <button class="suggestion" (click)="ask(s)">{{ s }}</button>
+              }
+            </div>
+          </div>
+        } @else {
+          @for (msg of messages(); track $index) {
+            <div class="message" [class.user]="msg.role === 'user'">
+              <div class="message-role">{{ msg.role === 'user' ? 'You' : 'Assistant' }}</div>
+              <div class="message-body">
+                @if (msg.streaming && !msg.text) {
+                  <div class="typing">
+                    <span></span><span></span><span></span>
+                  </div>
+                } @else {
+                  <p class="message-text">{{ msg.text }}@if (msg.streaming) {<span class="cursor">▍</span>}</p>
+                }
+
+                @if (msg.sources && msg.sources.length) {
+                  <details class="sources">
+                    <summary>{{ msg.sources.length }} retrieved chunk{{ msg.sources.length === 1 ? '' : 's' }}</summary>
+                    @for (src of msg.sources; track $index) {
+                      <div class="source">{{ src }}</div>
+                    }
+                  </details>
+                }
+
+                @if (msg.timingMs !== undefined) {
+                  <div class="message-meta">{{ formatMs(msg.timingMs) }}</div>
+                }
+              </div>
+            </div>
+          }
+        }
+
+      </div>
+
+      <div class="composer">
+        @if (error(); as err) {
+          <div class="alert alert-error" role="alert">
+            <span>⚠</span>
+            <span>{{ err }}</span>
+          </div>
+        }
+        <div class="composer-row">
+          <textarea
+            [ngModel]="question()"
+            (ngModelChange)="question.set($event)"
+            (keydown)="onKeydown($event)"
+            placeholder="Ask a question…  (Enter to send, Shift+Enter for a new line)"
+            rows="2"
+            [disabled]="sending()"
+          ></textarea>
+          @if (sending()) {
+            <button class="btn btn-ghost send-btn" (click)="stop()">Stop</button>
+          } @else {
+            <button class="btn btn-primary send-btn" (click)="ask()" [disabled]="!question().trim()">Send</button>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

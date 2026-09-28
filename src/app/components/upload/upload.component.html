@@ -1,0 +1,93 @@
+<div class="page">
+  <header class="page-header">
+    <div>
+      <h1>Upload document</h1>
+      <p class="subtitle">PDF, DOCX or TXT — extracted, chunked and embedded into the vector index.</p>
+    </div>
+  </header>
+
+  <div class="upload-grid">
+    <div
+      class="dropzone"
+      [class.drag-over]="dragOver()"
+      [class.disabled]="uploading()"
+      (drop)="onDrop($event)"
+      (dragover)="onDragOver($event)"
+      (dragleave)="onDragLeave()"
+    >
+      <input
+        type="file"
+        class="file-input"
+        [accept]="accepted"
+        (change)="onFileChange($event)"
+        [disabled]="uploading()"
+      />
+
+      @if (!selected()) {
+        <div class="dropzone-inner">
+          <div class="dropzone-icon">⬆</div>
+          <p class="dropzone-title">Drop a file here, or <span class="link">browse</span></p>
+          <p class="dropzone-hint">{{ acceptedLabel }} · up to {{ maxSizeMb }} MB</p>
+        </div>
+      } @else {
+        <div class="dropzone-inner">
+          <div class="file-icon">📄</div>
+          <p class="file-name">{{ selected()!.name }}</p>
+          <p class="file-size">{{ selected()!.size | number }} bytes</p>
+          @if (!uploading()) {
+            <button class="btn btn-ghost" (click)="select(null)">Choose a different file</button>
+          }
+        </div>
+      }
+    </div>
+
+    <aside class="side-panel">
+      <h3>What happens</h3>
+      <ol class="steps">
+        <li><span class="step-num">1</span> Text is extracted from the file.</li>
+        <li><span class="step-num">2</span> The text is split into 250-word chunks.</li>
+        <li><span class="step-num">3</span> Each chunk is embedded via Ollama.</li>
+        <li><span class="step-num">4</span> Vectors are stored in SQL Server 2025.</li>
+      </ol>
+
+      <div class="note">
+        <strong>Heads up:</strong> embedding runs on CPU. A large document can take a couple of minutes —
+        the request stays open until it finishes.
+      </div>
+    </aside>
+  </div>
+
+  @if (error(); as err) {
+    <div class="alert alert-error" role="alert">
+      <span>⚠</span>
+      <span>{{ err }}</span>
+    </div>
+  }
+
+  @if (uploading()) {
+    <div class="progress-card">
+      <div class="progress-head">
+        <span>Embedding {{ selected()?.name }}…</span>
+        <span class="progress-pct">{{ progress() }}%</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-bar" [style.width.%]="progress()"></div>
+      </div>
+      <p class="progress-hint">This can take a few minutes for large documents. You can keep this tab open.</p>
+    </div>
+  }
+
+  @if (done(); as message) {
+    <div class="alert alert-success" role="status">
+      <span>✓</span>
+      <span>{{ message }}</span>
+      <a class="link" routerLink="/documents">View documents →</a>
+    </div>
+  }
+
+  <div class="actions">
+    <button class="btn btn-primary btn-lg" (click)="upload()" [disabled]="!canUpload()">
+      {{ uploading() ? 'Indexing…' : 'Index document' }}
+    </button>
+  </div>
+</div>
